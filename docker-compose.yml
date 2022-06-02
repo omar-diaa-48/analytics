@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  db:
+    build:
+      context: ./db
+    container_name: analytics-db
+    volumes:
+      - analytics-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: analytics
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 123Z56abcyQ
+    networks:
+      - analytics
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: analytics-backend
+    container_name: analytics-backend
+    depends_on:
+      - db
+    environment:
+      NODE_ENV: development
+      FRONT_END_URL: http://localhost:3000
+    volumes:
+      - ./analytics:/app
+    ports:
+      - 9000:9000
+    networks:
+      - analytics
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: analytics-frontend
+    container_name: analytics-frontend
+    environment:
+      NODE_ENV: development
+      REACT_APP_BACK_END_URL: http://localhost:9000
+    ports:
+      - 3000:3000
+    networks:
+      - analytics
+volumes:
+  analytics-db:
+    name: analytics-db
+networks:
+  analytics:
+    name: analytics-network
+    driver: bridge
